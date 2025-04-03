@@ -1,10 +1,8 @@
 use macroquad::prelude::*;
 
-struct Game {
-}
-struct Entity {
+struct Entity<'a> {
     coord : Vec2,
-    texture : Option<Texture2D>,
+    texture : &'a Texture2D,
     rotation : f32,
     dest_size : Option<Vec2>,
 }
@@ -17,10 +15,8 @@ impl Entity {
             rotation : self.rotation,
             ..Default::default()
         };
-        // we use let Some ... because else we have to use clone to have texture in the function
-        if let Some(texture) = &self.texture {
-            draw_texture_ex(texture, self.coord.x, self.coord.y, WHITE, draw_param);
-        }
+        // we use let Some ... because else we have to use clone or a lifetime to have texture in the function
+        draw_texture_ex(self.texture, self.coord.x, self.coord.y, WHITE, draw_param);
     }
 }
 impl Default for Entity{
