@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use macroquad::prelude::*;
 use serde::Deserialize;
 
-const TILE_SIZE: i32 = 16;
+const _TILE_SIZE: i32 = 16;
 
 
 fn window_conf() -> Conf {
@@ -44,11 +44,44 @@ struct LDtkTile {
 
 struct Player {
     hitbox : Rect,
-    speed : f32,
-    gravity : f32
+    vx : f32,
+    vy : f32,
+    on_floor: bool,
 }
 
 impl Player{
+    const SPEED: f32 = 10.;
+    const GRAVITY: f32 = 0.4;
+    const JUMP_FORCE: f32 = -10.;
+
+    fn update_inputs(&mut self){
+        self.vx = 0.;
+
+        if is_key_down(KeyCode::D){
+            self.vx += Self::SPEED;
+        }
+
+        if is_key_down(KeyCode::A){
+            self.vx += -Self::SPEED;
+        }
+
+        if is_key_pressed(KeyCode::Space) && self.on_floor {
+            self.vy = Self::JUMP_FORCE;
+            self.on_floor = false;
+        }
+
+    }
+
+    fn apply_physics(&mut self){
+        self.hitbox.x += self.vx;
+
+        self.hitbox.y += self.vy;
+
+        if !self.on_floor{
+            self.vy += Self::GRAVITY;
+        }
+    }
+
     fn draw(&mut self){
         let _draw_param = DrawTextureParams{
             dest_size: Some(vec2(self.hitbox.w,self.hitbox.h)),
@@ -59,33 +92,33 @@ impl Player{
         // we use let Some ... because else we have to use clone or a lifetime to have texture in the function
         // draw_texture_ex(self.texture, self.coord.x, self.coord.y, WHITE, draw_param);
     }
-    fn action(&mut self, map : &HashSet<[i32;2]>){
+    fn _action(&mut self, _map : &HashSet<[i32;2]>){
         if is_key_down(KeyCode::A){
-            let temp = self.hitbox.x as i32 - self.speed as i32;
-            if map.contains(&[temp - temp % 16, 15*16]){
-                self.hitbox.x = (temp - temp % 16 + 16) as f32
-            }else {
-                self.hitbox.x = temp as f32
-            }
+            self.hitbox.x += -Self::SPEED;
         }
         if is_key_down(KeyCode::D){
-            let temp = self.hitbox.x as i32 + self.hitbox.w as i32 + self.speed as i32;
-            if map.contains(&[temp - temp % 16, 15*16]){
-                self.hitbox.x = (temp - self.hitbox.w as i32 - temp % 16) as f32
-            }else {
-                self.hitbox.x = temp as f32 - self.hitbox.w
-            }
+            self.hitbox.x += Self::SPEED;
         }
-        if is_key_down(KeyCode::Space){
-            self.gravity = -6.;
+        if is_key_pressed(KeyCode::Space) && self.on_floor {
+            self.vy = Self::JUMP_FORCE;
+            self.on_floor = false;
         }
-        self.hitbox.y += self.gravity;
+        if !self.on_floor{
+            self.vy += Self::GRAVITY;
+        }
+        print!("{}",self.vy);
+    }
+
+    fn update(&mut self){
+        self.update_inputs();
+        self.apply_physics();
+        self.draw();
     }
 }
 
 struct _Resource{
     textures : Vec<Texture2D>,
-} 
+}
 
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * t
@@ -107,8 +140,9 @@ async fn main() {
     };
     let mut maho_shojo = Player {
         hitbox : Rect::new(2.*16., 16.*16.-24.,20., 24.),
-        speed : 5.,
-        gravity : 0.,
+        vx : 3.,
+        vy : 0.,
+        on_floor : true,
     };
 
     let file = load_string("assets/test.ldtk").await.unwrap();
@@ -124,16 +158,14 @@ async fn main() {
     loop {
         clear_background(SKYBLUE);
 
-        camera.target = lerp_vec2(camera.target, vec2(maho_shojo.hitbox.x,maho_shojo.hitbox.y), 0.1); // ← version smooth
+        camera.target = lerp_vec2(camera.target, vec2(maho_shojo.hitbox.x,maho_shojo.hitbox.y), 0.05);
         set_camera(&camera);
-        maho_shojo.action(&map);
-        maho_shojo.draw();
+        maho_shojo.update();
         
         layers.iter().find(|layer| layer.identifier == "Base").unwrap()
         .tiles.iter()
         .for_each(|tile| 
             draw_rectangle(tile.position[0] as f32, tile.position[1] as f32, 16., 16., DARKGREEN));
-        next_frame().await; 
-
+        next_frame().await;
     }
 }
