@@ -123,8 +123,8 @@ impl Player{
         };
 
         for x in (left..=right).filter(|x| if right%TILE_SIZE==0 {*x!=right} else {true}).step_by(TILE_SIZE as usize) {
-            let tile_x = x / TILE_SIZE * TILE_SIZE;
-            let tile_y = y / TILE_SIZE * TILE_SIZE;
+            let tile_x: i32 = x / TILE_SIZE * TILE_SIZE;
+            let tile_y: i32 = y / TILE_SIZE * TILE_SIZE;
 
             if map.contains(&(tile_x,tile_y)) {
                 if y == bottom {
@@ -137,9 +137,6 @@ impl Player{
                 }
             }
         }
-
-
-
     }
 
     fn apply_physics(&mut self, map:&HashSet<(i32,i32)>){
@@ -196,7 +193,7 @@ async fn main() {
         ..Default::default()
     };
     let mut maho_shojo = Player {
-        hitbox : Rect::new(9.*16., 13.*16.-24.,16., 58.),
+        hitbox : Rect::new(9.*16., 13.*16.-24.,16., 20.),
         vx : 0.,
         vy : 0.,
         on_floor : true,
