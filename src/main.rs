@@ -91,7 +91,7 @@ impl Player{
             left
         };
 
-        for y in (top..=bottom).step_by(TILE_SIZE as usize) {
+        for y in (top..=bottom).filter(|y| if bottom%TILE_SIZE==0 {*y!=bottom} else {true}).step_by(TILE_SIZE as usize) {
             let tile_x = x / TILE_SIZE * TILE_SIZE;
             let tile_y = y / TILE_SIZE * TILE_SIZE;
 
@@ -142,6 +142,7 @@ impl Player{
     fn apply_physics(&mut self, map:&HashSet<(i32,i32)>){
 
         self.hitbox.x += self.vx;
+        // print!("{}", self.vx);
         self.check_collision_x(map);
 
         self.hitbox.y += self.vy;
@@ -193,7 +194,7 @@ async fn main() {
         ..Default::default()
     };
     let mut maho_shojo = Player {
-        hitbox : Rect::new(9.*16., 13.*16.-24.,16., 20.),
+        hitbox : Rect::new(9.*16., 13.*16.-24.,16., 16.),
         vx : 0.,
         vy : 0.,
         on_floor : true,
