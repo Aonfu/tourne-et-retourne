@@ -10,13 +10,15 @@ use traits::entity::Entity;
 
 
 fn window_conf() -> Conf {
-    Conf {
+    let mut conf = Conf {
         window_title: "Refind Maho".to_string(),
         window_width: 640,
         window_height: 320,
         fullscreen: false,
         ..Default::default()
-    }
+    };
+    conf.platform.swap_interval = Some(0);
+    conf
 }
 
 #[derive(Deserialize, Debug)]
@@ -76,7 +78,6 @@ async fn main() {
     .find(|layer| layer.identifier == "Base")
     .unwrap().tiles.iter()
     .for_each(|tile| {map.insert((tile.position[0], tile.position[1]));} );
-    
     loop {
         clear_background(SKYBLUE);
 
@@ -88,7 +89,7 @@ async fn main() {
         .tiles.iter()
         .for_each(|tile| 
             draw_rectangle(tile.position[0] as f32, tile.position[1] as f32, 16., 16., DARKGREEN));
+        draw_fps();
         next_frame().await;
-        print!("{}\n",get_fps());
     }
 }

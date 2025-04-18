@@ -133,14 +133,14 @@ impl Collidable for Player {
 
     fn apply_physics(&mut self, map:&HashSet<(i32,i32)>){
 
-        self.hitbox.x += self.vx;
+        self.hitbox.x += self.vx * get_frame_time();
         self.check_collision_x(map);
 
-        self.hitbox.y += self.vy;
+        self.hitbox.y += self.vy * get_frame_time();
         self.check_collision_y(map);
 
         if !self.on_floor{
-            self.vy += GRAVITY;
+            self.vy += GRAVITY * get_frame_time();
         }
     }
 }
