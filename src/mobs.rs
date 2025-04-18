@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use macroquad::math::Rect;
 use crate::{
-    constants::{GRAVITY, JUMP_FORCE, TILE_SIZE}, 
+    constants::{GRAVITY, JUMP_FORCE, SPEED, TILE_SIZE}, 
     player::Player, 
     traits::{collidable::Collidable, entity::{distance, Entity}}
 };
@@ -26,10 +26,19 @@ impl Slime {
     }
 
     fn behavior(&mut self, map: &HashSet<(i32, i32)> ,player : &Player) {
+        // the slime moves by jump on player if player is in it range
+
         if distance(self, player) <= 100. && self.on_floor{ 
-            self.vy = JUMP_FORCE;
+            self.vy = JUMP_FORCE * 0.5;
             self.on_floor = false;
         }
+
+        self.vx = if distance(self, player) <= 100. && !self.on_floor {
+            let direction = if self.get_hitbox().x > player.get_hitbox().x {-1.} else {1.};
+            direction * SPEED * 0.5
+
+        } else {0.};
+        
     }
 
     pub fn update(& mut self, map : &HashSet<(i32, i32)>, player : &Player) {

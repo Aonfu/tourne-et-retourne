@@ -94,7 +94,6 @@ async fn main() {
         .tiles.iter()
         .for_each(|tile| 
             draw_rectangle(tile.position[0] as f32, tile.position[1] as f32, 16., 16., DARKGREEN));
-        draw_fps();
         next_frame().await;
     }
 }
