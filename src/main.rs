@@ -1,9 +1,11 @@
 mod player;
 mod constants;
 mod traits;
+mod mobs;
 
 use std::collections::HashSet;
 use macroquad::prelude::*;
+use mobs::Slime;
 use serde::Deserialize;
 use player::Player;
 use traits::entity::Entity;
@@ -69,6 +71,8 @@ async fn main() {
     };
     let mut maho_shojo = Player::new();
 
+    let mut limule = Slime::new();
+
     let file = load_string("assets/test.ldtk").await.unwrap();
     let project: LDtkProject = serde_json::from_str(&file).unwrap();
     let level = &project.levels[0];
@@ -83,6 +87,7 @@ async fn main() {
 
         camera.target = lerp_vec2(camera.target, vec2(maho_shojo.get_hitbox().x,maho_shojo.get_hitbox().y), 0.05);
         set_camera(&camera);
+        limule.update(&map, &maho_shojo);
         maho_shojo.update(&map);
         
         layers.iter().find(|layer| layer.identifier == "Base").unwrap()
