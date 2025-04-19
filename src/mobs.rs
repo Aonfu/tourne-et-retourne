@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 use macroquad::math::Rect;
 use crate::{
@@ -25,7 +25,7 @@ impl Slime {
         }
     }
 
-    fn behavior(&mut self, map: &HashSet<(i32, i32)> ,player : &Player) {
+    fn behavior(&mut self, map: &HashMap<(i32, i32),(i32, i32)> ,player : &Player) {
         // the slime moves by jump on player if player is in it range
 
         if distance(self, player) <= 100. && self.on_floor{ 
@@ -38,10 +38,10 @@ impl Slime {
             direction * SPEED * 0.5
 
         } else {0.};
-        
+
     }
 
-    pub fn update(& mut self, map : &HashSet<(i32, i32)>, player : &Player) {
+    pub fn update(& mut self, map : &HashMap<(i32, i32),(i32, i32)>, player : &Player) {
         self.behavior(map, player);
         self.apply_physics(map);
         self.draw();
@@ -61,8 +61,8 @@ impl Entity for Slime {
 }
 
 impl Collidable for Slime {
-    
-    fn check_collision_x(&mut self, map : &HashSet<(i32, i32)>){
+
+    fn check_collision_x(&mut self, map : &HashMap<(i32, i32),(i32, i32)>){
 
         let left = self.hitbox.x as i32;
         let right = (self.hitbox.x + self.hitbox.w) as i32;
@@ -79,7 +79,7 @@ impl Collidable for Slime {
             let tile_x = x / TILE_SIZE * TILE_SIZE;
             let tile_y = y / TILE_SIZE * TILE_SIZE;
 
-            if map.contains(&(tile_x,tile_y)) {
+            if map.contains_key(&(tile_x,tile_y)) {
                 if x == left {
                     self.hitbox.x = (tile_x + TILE_SIZE) as f32;
                     self.vx = 0.; // line useless for now but useful for understanding
@@ -91,7 +91,7 @@ impl Collidable for Slime {
         }
     }
 
-    fn check_collision_y(&mut self, map : &HashSet<(i32, i32)>){
+    fn check_collision_y(&mut self, map : &HashMap<(i32, i32),(i32, i32)>){
 
         self.on_floor = false; // it will true if the floor is detected
 
@@ -110,7 +110,7 @@ impl Collidable for Slime {
             let tile_x: i32 = x / TILE_SIZE * TILE_SIZE;
             let tile_y: i32 = y / TILE_SIZE * TILE_SIZE;
 
-            if map.contains(&(tile_x,tile_y)) {
+            if map.contains_key(&(tile_x,tile_y)) {
                 if y == bottom {
                     self.hitbox.y = tile_y as f32 - self.hitbox.h;
                     self.vy = 0.;
@@ -123,7 +123,7 @@ impl Collidable for Slime {
         }
     }
 
-    fn apply_physics(&mut self, map:&HashSet<(i32,i32)>){
+    fn apply_physics(&mut self, map:&HashMap<(i32, i32),(i32, i32)>){
 
         self.hitbox.x += self.vx * get_frame_time();
         self.check_collision_x(map);

@@ -2,14 +2,14 @@ mod player;
 mod constants;
 mod traits;
 mod mobs;
+mod ldtk;
 
-use std::collections::HashSet;
+use std::collections::HashMap;
 use macroquad::prelude::*;
 use mobs::Slime;
-use serde::Deserialize;
 use player::Player;
 use traits::entity::Entity;
-
+use ldtk::*;
 
 fn window_conf() -> Conf {
     let mut conf = Conf {
@@ -19,36 +19,9 @@ fn window_conf() -> Conf {
         fullscreen: false,
         ..Default::default()
     };
-    conf.platform.swap_interval = Some(0);
+    // to have a maximum of fps
+    conf.platform.swap_interval = Some(0); 
     conf
-}
-
-#[derive(Deserialize, Debug)]
-struct LDtkProject {
-    levels: Vec<LDtkLevel>,
-}
-
-#[derive(Deserialize, Debug)]
-struct LDtkLevel {
-    #[serde(rename = "identifier")]
-    _identifier: String,
-    #[serde(rename = "layerInstances")]
-    layer_instances: Option<Vec<LDtkLayer>>,
-}
-
-#[derive(Deserialize, Debug)]
-struct LDtkLayer {
-    #[serde(rename = "__identifier")]
-    identifier: String,
-
-    #[serde(rename = "gridTiles")]
-    tiles: Vec<LDtkTile>,
-}
-
-#[derive(Deserialize, Debug)]
-struct LDtkTile {
-    #[serde(rename = "px")]
-    position: [i32; 2],
 }
 
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
@@ -75,25 +48,22 @@ async fn main() {
 
     let file = load_string("assets/test.ldtk").await.unwrap();
     let project: LDtkProject = serde_json::from_str(&file).unwrap();
-    let level = &project.levels[0];
-    let layers = level.layer_instances.as_ref().unwrap();
-    let mut map: HashSet<(i32,i32)> = HashSet::new();
-    layers.iter() 
-    .find(|layer| layer.identifier == "Base")
-    .unwrap().tiles.iter()
-    .for_each(|tile| {map.insert((tile.position[0], tile.position[1]));} );
+    let level = &project.get_levels()[0];
+    let layers = level.get_layer_instances().unwrap();
+    let map: HashMap<(i32,i32), (i32,i32)> = map_from_tiles(layers.iter() 
+    .find(|layer| layer.get_identifier() == "Base")
+    .unwrap().get_tiles());
+    
     loop {
         clear_background(SKYBLUE);
+        draw_fps();
 
         camera.target = lerp_vec2(camera.target, vec2(maho_shojo.get_hitbox().x,maho_shojo.get_hitbox().y), 0.05);
         set_camera(&camera);
         limule.update(&map, &maho_shojo);
         maho_shojo.update(&map);
         
-        layers.iter().find(|layer| layer.identifier == "Base").unwrap()
-        .tiles.iter()
-        .for_each(|tile| 
-            draw_rectangle(tile.position[0] as f32, tile.position[1] as f32, 16., 16., DARKGREEN));
+        map.iter().for_each(|tile| draw_rectangle(tile.0.0 as f32, tile.0.1 as f32, 16., 16., DARKGREEN));
         next_frame().await;
     }
 }
