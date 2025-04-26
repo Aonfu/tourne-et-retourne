@@ -25,7 +25,7 @@ impl Slime {
         }
     }
 
-    fn behavior(&mut self, map: &HashMap<(i32, i32),(i32, i32)> ,player : &Player) {
+    pub fn behavior(&mut self, map: &HashMap<(i32, i32),(i32, i32)> ,player : &Player) {
         // the slime moves by jump on player if player is in it range
 
         if distance(self, player) <= 100. && self.on_floor{ 
@@ -41,9 +41,9 @@ impl Slime {
 
     }
 
-    pub fn update(& mut self, map : &HashMap<(i32, i32),(i32, i32)>, player : &Player) {
+    pub fn update(& mut self, map : &HashMap<(i32, i32),(i32, i32)>, player : &Player, delta: f32) {
         self.behavior(map, player);
-        self.apply_physics(map);
+        self.apply_physics(map,delta);
         self.draw();
     }
 }
@@ -123,16 +123,16 @@ impl Collidable for Slime {
         }
     }
 
-    fn apply_physics(&mut self, map:&HashMap<(i32, i32),(i32, i32)>){
+    fn apply_physics(&mut self, map:&HashMap<(i32, i32),(i32, i32)>, delta: f32){
 
-        self.hitbox.x += self.vx * get_frame_time();
+        self.hitbox.x += self.vx * delta;
         self.check_collision_x(map);
 
-        self.hitbox.y += self.vy * get_frame_time();
+        self.hitbox.y += self.vy * delta;
         self.check_collision_y(map);
 
         if !self.on_floor{
-            self.vy += GRAVITY * get_frame_time();
+            self.vy += GRAVITY * delta;
         }
     }
 }

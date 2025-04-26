@@ -22,7 +22,7 @@ impl Player{
         }
     }
 
-    fn update_inputs(&mut self){
+    pub fn update_inputs(&mut self){
         self.vx = 0.;
 
         if is_key_down(KeyCode::D){
@@ -45,9 +45,9 @@ impl Player{
 
     }
 
-    pub fn update(& mut self, map : &HashMap<(i32, i32),(i32, i32)>){
+    pub fn update(& mut self, map : &HashMap<(i32, i32),(i32, i32)>, delta : f32){
         self.update_inputs();
-        self.apply_physics(map);
+        self.apply_physics(map, delta);
         self.draw();
     }
 
@@ -131,16 +131,16 @@ impl Collidable for Player {
         }
     }
 
-    fn apply_physics(&mut self, map:&HashMap<(i32, i32),(i32, i32)>){
+    fn apply_physics(&mut self, map:&HashMap<(i32, i32),(i32, i32)>, delta: f32){
 
-        self.hitbox.x += self.vx * get_frame_time();
+        self.hitbox.x += self.vx * delta;
         self.check_collision_x(map);
 
-        self.hitbox.y += self.vy * get_frame_time();
+        self.hitbox.y += self.vy * delta;
         self.check_collision_y(map);
 
         if !self.on_floor{
-            self.vy += GRAVITY * get_frame_time();
+            self.vy += GRAVITY * delta;
         }
     }
 }
