@@ -2,9 +2,7 @@ use std::collections::HashMap;
 
 use macroquad::math::Rect;
 use crate::{
-    constants::{GRAVITY, JUMP_FORCE, SPEED, TILE_SIZE}, 
-    player::Player, 
-    traits::{collidable::Collidable, entity::{distance, Entity}}
+    constants::{FIXED_TIMESTEP, GRAVITY, JUMP_FORCE, SPEED, TILE_SIZE}, game::GameContext, player::Player, traits::{collidable::Collidable, entity::{distance, Entity, EntityType}}
 };
 use macroquad::prelude::*;
 
@@ -25,26 +23,20 @@ impl Slime {
         }
     }
 
-    pub fn behavior(&mut self, map: &HashMap<(i32, i32),(i32, i32)> ,player : &Player) {
+    pub fn behavior(&mut self, map: &HashMap<(i32, i32),(i32, i32)> ,player_hitbox : Rect) {
         // the slime moves by jump on player if player is in it range
 
-        if distance(self, player) <= 100. && self.on_floor{ 
+        if distance(self.get_hitbox(), player_hitbox) <= 100. && self.on_floor{ 
             self.vy = JUMP_FORCE * 0.5;
             self.on_floor = false;
         }
 
-        self.vx = if distance(self, player) <= 100. && !self.on_floor {
-            let direction = if self.get_hitbox().x > player.get_hitbox().x {-1.} else {1.};
+        self.vx = if distance(self.get_hitbox(), player_hitbox) <= 100. && !self.on_floor {
+            let direction = if self.get_hitbox().x > player_hitbox.x {-1.} else {1.};
             direction * SPEED * 0.5
 
         } else {0.};
 
-    }
-
-    pub fn update(& mut self, map : &HashMap<(i32, i32),(i32, i32)>, player : &Player, delta: f32) {
-        self.behavior(map, player);
-        self.apply_physics(map,delta);
-        self.draw();
     }
 }
 
@@ -57,6 +49,16 @@ impl Entity for Slime {
 
     fn get_hitbox(&self) -> Rect {
         Rect { x: self.hitbox.x, y: self.hitbox.y, w: self.hitbox.w, h: self.hitbox.h }
+    }
+
+    fn get_entity_type(&self) -> EntityType {
+        EntityType::Slime
+    }
+
+    fn update(&mut self, game_context : &GameContext) {
+        self.behavior(game_context.map, game_context.player_hitbox);
+        self.apply_physics(game_context.map);
+        self.draw();
     }
 }
 
@@ -123,16 +125,16 @@ impl Collidable for Slime {
         }
     }
 
-    fn apply_physics(&mut self, map:&HashMap<(i32, i32),(i32, i32)>, delta: f32){
+    fn apply_physics(&mut self, map:&HashMap<(i32, i32),(i32, i32)>){
 
-        self.hitbox.x += self.vx * delta;
+        self.hitbox.x += self.vx * FIXED_TIMESTEP;
         self.check_collision_x(map);
 
-        self.hitbox.y += self.vy * delta;
+        self.hitbox.y += self.vy * FIXED_TIMESTEP;
         self.check_collision_y(map);
 
         if !self.on_floor{
-            self.vy += GRAVITY * delta;
+            self.vy += GRAVITY * FIXED_TIMESTEP;
         }
     }
 }

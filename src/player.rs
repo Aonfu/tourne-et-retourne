@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use macroquad::prelude::*;
 use crate::constants::*;
 
+use crate::game::GameContext;
 use crate::traits::collidable::Collidable;
 use crate::traits::entity::*;
 
@@ -45,12 +46,6 @@ impl Player{
 
     }
 
-    pub fn update(& mut self, map : &HashMap<(i32, i32),(i32, i32)>, delta : f32){
-        self.update_inputs();
-        self.apply_physics(map, delta);
-        self.draw();
-    }
-
 }
 
 impl Entity for Player {
@@ -65,6 +60,15 @@ impl Entity for Player {
 
     fn get_hitbox(&self) -> Rect {
         self.hitbox
+    }
+
+    fn get_entity_type(&self) -> EntityType {
+        EntityType::Player
+    }
+
+    fn update(&mut self, game_context : &GameContext){
+        self.update_inputs();
+        self.apply_physics(game_context.map);
     }
 }
 
@@ -131,16 +135,16 @@ impl Collidable for Player {
         }
     }
 
-    fn apply_physics(&mut self, map:&HashMap<(i32, i32),(i32, i32)>, delta: f32){
+    fn apply_physics(&mut self, map:&HashMap<(i32, i32),(i32, i32)>){
 
-        self.hitbox.x += self.vx * delta;
+        self.hitbox.x += self.vx * FIXED_TIMESTEP;
         self.check_collision_x(map);
 
-        self.hitbox.y += self.vy * delta;
+        self.hitbox.y += self.vy * FIXED_TIMESTEP;
         self.check_collision_y(map);
 
         if !self.on_floor{
-            self.vy += GRAVITY * delta;
+            self.vy += GRAVITY * FIXED_TIMESTEP;
         }
     }
 }

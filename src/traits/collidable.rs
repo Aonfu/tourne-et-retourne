@@ -7,5 +7,5 @@ pub trait Collidable {
 
     fn check_collision_y(&mut self, map: &HashMap<(i32, i32),(i32, i32)>);
 
-    fn apply_physics(&mut self, map: &HashMap<(i32, i32),(i32, i32)>, delta : f32);
+    fn apply_physics(&mut self, map: &HashMap<(i32, i32),(i32, i32)>);
 }

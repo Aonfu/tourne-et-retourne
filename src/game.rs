@@ -1,19 +1,25 @@
-use std::{collections::HashMap, thread::sleep, time::Duration};
-use crate::constants::FIXED_TIMESTEP;
+use std::collections::HashMap;
+use crate::constants::{FIXED_TIMESTEP, TILE_SIZE};
+use crate::textures::AssetManager;
 use macroquad::prelude::*;
 use crate::mobs::Slime;
 use crate::player::Player;
-use crate::traits::{collidable::Collidable, entity::Entity};
+use crate::traits::entity::Entity;
 use crate::ldtk::*;
 
 
 pub struct Game {
     accumulator : f32,
+    textures : AssetManager,
     camera : Camera2D,
-    player : Player,
     map : HashMap<(i32,i32), (i32,i32)>,
-    limule : Slime
+    mobs : Vec<Box<dyn Entity>>,
+    player : Player,
+}
 
+pub struct GameContext<'a> {
+    pub map : &'a HashMap<(i32,i32), (i32,i32)>,
+    pub player_hitbox : Rect,
 }
 
 impl Game {
@@ -22,18 +28,21 @@ impl Game {
         let project: LDtkProject = serde_json::from_str(&file).unwrap();
         let level = &project.get_levels()[0];
         let layers = level.get_layer_instances().unwrap();
+        let mut mobs : Vec<Box<dyn Entity>>= Vec::new();
+        mobs.push(Box::new(Slime::new()));
         Game {
             accumulator : 0.0,
+            textures : AssetManager::load().await,
             camera : Camera2D {
                 target: vec2(100.0, 100.0),
                 zoom: vec2(2.0 / screen_width(), 2.0 / screen_height()), 
                 ..Default::default()
             },
-            player : Player::new(),
             map : map_from_tiles(layers.iter() 
             .find(|layer| layer.get_identifier() == "Base")
             .unwrap().get_tiles()),
-            limule : Slime::new(),
+            mobs : mobs,
+            player: Player::new()
         }
     }
 
@@ -43,27 +52,47 @@ impl Game {
         let deltatime = get_frame_time();
         self.accumulator += deltatime;
 
-        self.camera.target = lerp_vec2(self.camera.target, vec2(self.player.get_hitbox().x,self.player.get_hitbox().y), 0.05);
-        set_camera(&self.camera);
-        // sleep(Duration::from_millis((1000.) as u64));
-        while self.accumulator >= FIXED_TIMESTEP {
-            self.camera.target = lerp_vec2(self.camera.target, vec2(self.player.get_hitbox().x,self.player.get_hitbox().y), 0.05);
-            set_camera(&self.camera);
-            self.player.update_inputs();
-            self.player.apply_physics(&self.map, FIXED_TIMESTEP);
+        let game_context = GameContext {
+            player_hitbox : self.player.get_hitbox(),
+            map: &self.map,
+        };
+        
 
-            self.limule.apply_physics(&self.map, FIXED_TIMESTEP);
-            self.limule.behavior(&self.map, &self.player);
+        set_camera(&self.camera);
+        
+
+        // sleep(Duration::from_millis((1000.) as u64));
+
+        while self.accumulator >= FIXED_TIMESTEP {
+
+            self.camera.target = vec2(self.player.get_hitbox().x.round() ,self.player.get_hitbox().y.round());
+            set_camera(&self.camera);
+
+            for entity in self.mobs.iter_mut() {
+                entity.update(&game_context);
+            }
+
+            self.player.update(&game_context);
 
             self.accumulator -= FIXED_TIMESTEP;
         }
 
+        for entity in self.mobs.iter() {
+            entity.draw()
+        }
+
         self.player.draw();
-        self.limule.draw();
-        // maho_shojo.update(&self.map);
-        self.map.iter().for_each(|tile| draw_rectangle(tile.0.0 as f32, tile.0.1 as f32, 16., 16., DARKGREEN));
+
+
+        self.map.iter().for_each(|tile| {
+            let d = DrawTextureParams {
+                source : Some(Rect::new(tile.1.0 as f32, tile.1.1 as f32, TILE_SIZE as f32, TILE_SIZE as f32)),
+                ..Default::default()
+            };
+            draw_texture_ex(&self.textures.tileset,tile.0.0 as f32, tile.0.1 as f32, WHITE, d);});
         next_frame().await;
     }
+
 }
 
 

@@ -4,6 +4,7 @@ mod traits;
 mod mobs;
 mod ldtk;
 mod game;
+mod textures;
 
 use game::Game;
 use macroquad::prelude::*;
