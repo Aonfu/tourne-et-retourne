@@ -13,6 +13,7 @@ pub struct Game {
     textures : AssetManager,
     camera : Camera2D,
     map : HashMap<(i32,i32), (i32,i32)>,
+    to_spawn : Vec<Box<dyn Entity>>,
     mobs : Vec<Box<dyn Entity>>,
     player : Player,
 }
@@ -28,8 +29,8 @@ impl Game {
         let project: LDtkProject = serde_json::from_str(&file).unwrap();
         let level = &project.get_levels()[0];
         let layers = level.get_layer_instances().unwrap();
-        let mut mobs : Vec<Box<dyn Entity>>= Vec::new();
-        mobs.push(Box::new(Slime::new()));
+        let entity_layer = layers.iter().find(|layer| layer.get_identifier() == "Entities").unwrap();
+        let to_spawn = entity_to_spawn(entity_layer);
         Game {
             accumulator : 0.0,
             textures : AssetManager::load().await,
@@ -41,23 +42,26 @@ impl Game {
             map : map_from_tiles(layers.iter() 
             .find(|layer| layer.get_identifier() == "Base")
             .unwrap().get_tiles()),
-            mobs : mobs,
-            player: Player::new()
+            to_spawn,
+            mobs : Vec::new(),
+            player: player_ldtk(entity_layer)
         }
     }
 
     pub async fn update(&mut self){
         clear_background(SKYBLUE);
-        draw_fps();
         let deltatime = get_frame_time();
         self.accumulator += deltatime;
+
+        for entity in self.to_spawn.drain(..){
+            self.mobs.push(entity);
+        }
 
         let game_context = GameContext {
             player_hitbox : self.player.get_hitbox(),
             map: &self.map,
         };
         
-
         set_camera(&self.camera);
         
 
@@ -78,18 +82,24 @@ impl Game {
         }
 
         for entity in self.mobs.iter() {
-            entity.draw()
+            entity.draw();
         }
 
-        self.player.draw();
+        self.player.draw2().await;
 
+        draw_text("I LOVE KENNETH", 265., 125., 24., RED);
 
         self.map.iter().for_each(|tile| {
             let d = DrawTextureParams {
                 source : Some(Rect::new(tile.1.0 as f32, tile.1.1 as f32, TILE_SIZE as f32, TILE_SIZE as f32)),
                 ..Default::default()
             };
-            draw_texture_ex(&self.textures.tileset,tile.0.0 as f32, tile.0.1 as f32, WHITE, d);});
+            draw_texture_ex(&self.textures.tileset,tile.0.0 as f32, tile.0.1 as f32, WHITE, d);
+        });
+
+        
+
+        draw_fps();
         next_frame().await;
     }
 

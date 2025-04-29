@@ -1,21 +1,12 @@
 use macroquad::prelude::*;
 
-use crate::game::GameContext;
-
-#[derive(PartialEq)]
-pub enum EntityType {
-    Player,
-    Slime,
-}
-
+use crate::{game::GameContext, mobs::Slime};
 
 pub trait Entity {
 
     fn draw(&self);
 
     fn get_hitbox(&self) -> Rect;
-
-    fn get_entity_type(&self) -> EntityType;
 
     fn update(&mut self, game_context : &GameContext);
 

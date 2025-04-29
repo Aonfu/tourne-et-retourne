@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use macroquad::math::Rect;
 use crate::{
-    constants::{FIXED_TIMESTEP, GRAVITY, JUMP_FORCE, SPEED, TILE_SIZE}, game::GameContext, player::Player, traits::{collidable::Collidable, entity::{distance, Entity, EntityType}}
+    constants::{FIXED_TIMESTEP, GRAVITY, JUMP_FORCE, SPEED, TILE_SIZE}, game::GameContext, player::Player, traits::{collidable::Collidable, entity::{distance, Entity}}
 };
 use macroquad::prelude::*;
 
@@ -14,9 +14,9 @@ pub struct Slime {
 }
 
 impl Slime {
-    pub fn new() -> Slime {
+    pub fn new(x: f32, y: f32) -> Slime {
         Slime {
-            hitbox : Rect::new(29.*16., 2.*16.-24.,20., 20.),
+            hitbox : Rect::new(x, y,20., 20.),
             vx : 0.,
             vy : 0.,
             on_floor : true,
@@ -49,10 +49,6 @@ impl Entity for Slime {
 
     fn get_hitbox(&self) -> Rect {
         Rect { x: self.hitbox.x, y: self.hitbox.y, w: self.hitbox.w, h: self.hitbox.h }
-    }
-
-    fn get_entity_type(&self) -> EntityType {
-        EntityType::Slime
     }
 
     fn update(&mut self, game_context : &GameContext) {

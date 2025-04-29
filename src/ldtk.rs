@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
+use crate::{mobs::Slime, player::{self, Player}, traits::entity::{self, Entity}};
+
 
 #[derive(Deserialize, Debug)]
 pub struct LDtkProject {
@@ -36,6 +38,9 @@ pub struct LDtkLayer {
 
     #[serde(rename = "gridTiles")]
     tiles: Vec<LDtkTile>,
+
+    #[serde(rename = "entityInstances")]
+    entities : Vec<LDtkEntity>,
 }
 
 impl LDtkLayer {
@@ -45,6 +50,10 @@ impl LDtkLayer {
 
     pub fn get_identifier(&self) -> &str {
         &self.identifier
+    }
+
+    pub fn get_entities(&self) -> &Vec<LDtkEntity> {
+        &self.entities
     }
 }
 
@@ -66,8 +75,33 @@ impl LDtkTile {
     }
 }
 
+#[derive(Deserialize, Debug)]
+pub struct LDtkEntity{
+    #[serde(rename = "__identifier")]
+    identifier : String,
+    #[serde(rename = "px")]
+    position: [i32; 2],
+}
+
 pub fn map_from_tiles(tiles : &Vec<LDtkTile>) -> HashMap<(i32,i32),(i32,i32)> {
     let mut map = HashMap::new();
     tiles.iter().for_each(|tile| {map.insert((tile.get_position()[0], tile.get_position()[1]),(tile.get_texture_position()[0], tile.get_texture_position()[1]));} );
     map
+}
+
+pub fn entity_to_spawn(entity_layer: &LDtkLayer) -> Vec<Box<dyn Entity>> {
+    let mut entities: Vec<Box<dyn Entity>>= Vec::new();
+    for entity in entity_layer.get_entities().iter() {
+        match entity.identifier.as_str() {
+            "Slime" => entities.push(Box::new(Slime::new(entity.position[0] as f32, entity.position[1] as f32))),
+            _ => ()
+        }
+    }
+    entities
+}
+
+pub fn player_ldtk(entity_layer: &LDtkLayer) -> Player {
+    let ldtk_player = entity_layer.get_entities().iter().find(|entity| entity.identifier == "Player").unwrap();
+    Player::new(ldtk_player.position[0] as f32, ldtk_player.position[1] as f32)
+
 }

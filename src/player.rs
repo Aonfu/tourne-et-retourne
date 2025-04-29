@@ -14,9 +14,9 @@ pub struct Player {
 }
 
 impl Player{
-    pub fn new() -> Player {
+    pub fn new(x: f32, y: f32) -> Player {
         Player {
-            hitbox : Rect::new(9.*16., 13.*16.-24.,16., 16.),
+            hitbox : Rect::new(x, y,16., 16.),
             vx : 0.,
             vy : 0.,
             on_floor : true,
@@ -46,6 +46,20 @@ impl Player{
 
     }
 
+    pub async fn draw2(&self){
+        let _draw_param = DrawTextureParams{
+            dest_size: Some(vec2(self.hitbox.w,self.hitbox.h)),
+            ..Default::default()
+        };
+        let tex = load_texture("assets/base.png").await.unwrap();
+        let d = DrawTextureParams {
+            source : Some(Rect::new(0., 0., TILE_SIZE as f32, TILE_SIZE as f32)),
+            ..Default::default()
+        };
+        draw_texture_ex(&tex, self.hitbox.x, self.hitbox.y, WHITE, d);
+        //draw_rectangle(self.hitbox.x, self.hitbox.y, self.hitbox.w, self.hitbox.h, GREEN);
+    }
+
 }
 
 impl Entity for Player {
@@ -55,15 +69,11 @@ impl Entity for Player {
             dest_size: Some(vec2(self.hitbox.w,self.hitbox.h)),
             ..Default::default()
         };
-        draw_rectangle(self.hitbox.x, self.hitbox.y, self.hitbox.w, self.hitbox.h, PURPLE);
+        draw_rectangle(self.hitbox.x, self.hitbox.y, self.hitbox.w, self.hitbox.h, GREEN);
     }
 
     fn get_hitbox(&self) -> Rect {
         self.hitbox
-    }
-
-    fn get_entity_type(&self) -> EntityType {
-        EntityType::Player
     }
 
     fn update(&mut self, game_context : &GameContext){
