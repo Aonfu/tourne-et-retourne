@@ -51,7 +51,7 @@ impl Entity for Slime {
         Rect { x: self.hitbox.x, y: self.hitbox.y, w: self.hitbox.w, h: self.hitbox.h }
     }
 
-    fn update(&mut self, game_context : &GameContext) {
+    fn update(&mut self, game_context : &mut GameContext) {
         self.behavior(game_context.map, game_context.player_hitbox);
         self.apply_physics(game_context.map);
         self.draw();

@@ -8,7 +8,7 @@ pub trait Entity {
 
     fn get_hitbox(&self) -> Rect;
 
-    fn update(&mut self, game_context : &GameContext);
+    fn update(&mut self, game_context : &mut GameContext);
 
 }
 

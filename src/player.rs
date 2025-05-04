@@ -69,14 +69,14 @@ impl Entity for Player {
             dest_size: Some(vec2(self.hitbox.w,self.hitbox.h)),
             ..Default::default()
         };
-        draw_rectangle(self.hitbox.x, self.hitbox.y, self.hitbox.w, self.hitbox.h, GREEN);
+        draw_rectangle(self.hitbox.x, self.hitbox.y, self.hitbox.w, self.hitbox.h, DARKPURPLE);
     }
 
     fn get_hitbox(&self) -> Rect {
         self.hitbox
     }
 
-    fn update(&mut self, game_context : &GameContext){
+    fn update(&mut self, game_context : &mut GameContext){
         self.update_inputs();
         self.apply_physics(game_context.map);
     }

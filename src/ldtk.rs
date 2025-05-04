@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-use crate::{mobs::Slime, player::{self, Player}, traits::entity::{self, Entity}};
+use crate::{lever::Lever, mobs::Slime, player::{self, Player}, traits::entity::{self, Entity}};
 
 
 #[derive(Deserialize, Debug)]
@@ -94,6 +94,7 @@ pub fn entity_to_spawn(entity_layer: &LDtkLayer) -> Vec<Box<dyn Entity>> {
     for entity in entity_layer.get_entities().iter() {
         match entity.identifier.as_str() {
             "Slime" => entities.push(Box::new(Slime::new(entity.position[0] as f32, entity.position[1] as f32))),
+            "Lever" => entities.push(Box::new(Lever::new(entity.position[0] as f32, entity.position[1] as f32))),
             _ => ()
         }
     }

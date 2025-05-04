@@ -5,8 +5,12 @@ mod mobs;
 mod ldtk;
 mod game;
 mod textures;
+mod screen;
+mod menu;
+mod lever;
 
 use game::Game;
+use screen::Screen;
 use macroquad::prelude::*;
 
 fn window_conf() -> Conf {
@@ -18,15 +22,24 @@ fn window_conf() -> Conf {
         ..Default::default()
     };
     // to have a maximum of fps
-    conf.platform.swap_interval = Some(0); 
+    // conf.platform.swap_interval = Some(0); 
     conf
 }
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut game = Game::new().await;
-    
-    loop {
-        game.update().await;
+    let screen = Screen::Level;
+    match screen {
+        Screen::Menu => {
+            
+        }
+
+        Screen::Level => {
+            let mut game = Game::new().await;
+            
+            loop {
+                game.update().await;
+            }
+        }
     }
 }

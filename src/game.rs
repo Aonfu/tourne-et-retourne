@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use crate::constants::{FIXED_TIMESTEP, TILE_SIZE};
 use crate::textures::AssetManager;
 use macroquad::prelude::*;
-use crate::mobs::Slime;
 use crate::player::Player;
 use crate::traits::entity::Entity;
 use crate::ldtk::*;
@@ -19,7 +18,7 @@ pub struct Game {
 }
 
 pub struct GameContext<'a> {
-    pub map : &'a HashMap<(i32,i32), (i32,i32)>,
+    pub map : &'a mut HashMap<(i32,i32), (i32,i32)>,
     pub player_hitbox : Rect,
 }
 
@@ -27,7 +26,7 @@ impl Game {
     pub async fn new() -> Game {
         let file = load_string("assets/test.ldtk").await.unwrap();
         let project: LDtkProject = serde_json::from_str(&file).unwrap();
-        let level = &project.get_levels()[0];
+        let level = &project.get_levels()[1];
         let layers = level.get_layer_instances().unwrap();
         let entity_layer = layers.iter().find(|layer| layer.get_identifier() == "Entities").unwrap();
         let to_spawn = entity_to_spawn(entity_layer);
@@ -57,15 +56,14 @@ impl Game {
             self.mobs.push(entity);
         }
 
-        let game_context = GameContext {
+        let mut game_context = GameContext {
             player_hitbox : self.player.get_hitbox(),
-            map: &self.map,
+            map: &mut self.map,
         };
         
         set_camera(&self.camera);
-        
 
-        // sleep(Duration::from_millis((1000.) as u64));
+
 
         while self.accumulator >= FIXED_TIMESTEP {
 
@@ -73,10 +71,10 @@ impl Game {
             set_camera(&self.camera);
 
             for entity in self.mobs.iter_mut() {
-                entity.update(&game_context);
+                entity.update(&mut game_context);
             }
 
-            self.player.update(&game_context);
+            self.player.update(&mut game_context);
 
             self.accumulator -= FIXED_TIMESTEP;
         }
@@ -85,9 +83,9 @@ impl Game {
             entity.draw();
         }
 
-        self.player.draw2().await;
+        self.player.draw();
 
-        draw_text("I LOVE KENNETH", 265., 125., 24., RED);
+        // draw_text("I LOVE KENNETH", 265., 125., 24., RED);
 
         self.map.iter().for_each(|tile| {
             let d = DrawTextureParams {
@@ -96,10 +94,6 @@ impl Game {
             };
             draw_texture_ex(&self.textures.tileset,tile.0.0 as f32, tile.0.1 as f32, WHITE, d);
         });
-
-        
-
-        draw_fps();
         next_frame().await;
     }
 
