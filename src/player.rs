@@ -3,6 +3,7 @@ use macroquad::prelude::*;
 use crate::constants::*;
 
 use crate::game::GameContext;
+use crate::spell::{Element, Spell, SpellType};
 use crate::traits::collidable::Collidable;
 use crate::traits::entity::*;
 
@@ -16,14 +17,14 @@ pub struct Player {
 impl Player{
     pub fn new(x: f32, y: f32) -> Player {
         Player {
-            hitbox : Rect::new(x, y,16., 16.),
+            hitbox : Rect::new(x, y,16., 28.),
             vx : 0.,
             vy : 0.,
             on_floor : true,
         }
     }
 
-    pub fn update_inputs(&mut self){
+    pub fn update_inputs(&mut self, game_context : &mut GameContext){
         self.vx = 0.;
 
         if is_key_down(KeyCode::D){
@@ -44,6 +45,10 @@ impl Player{
             self.hitbox.y = 13.*16.-24.;
         }
 
+        if is_key_pressed(KeyCode::E) {
+            game_context.spells_to_spawn.push(Spell::new(self.hitbox.x, self.hitbox.y, SpellType::Ball, Element::Fire));
+        }
+
     }
 
     pub async fn draw2(&self){
@@ -51,12 +56,12 @@ impl Player{
             dest_size: Some(vec2(self.hitbox.w,self.hitbox.h)),
             ..Default::default()
         };
-        let tex = load_texture("assets/base.png").await.unwrap();
+        let tex = load_texture("assets/player.png").await.unwrap();
         let d = DrawTextureParams {
             source : Some(Rect::new(0., 0., TILE_SIZE as f32, TILE_SIZE as f32)),
             ..Default::default()
         };
-        draw_texture_ex(&tex, self.hitbox.x, self.hitbox.y, WHITE, d);
+        draw_texture(&tex, self.hitbox.x, self.hitbox.y, WHITE);
         //draw_rectangle(self.hitbox.x, self.hitbox.y, self.hitbox.w, self.hitbox.h, GREEN);
     }
 
@@ -77,7 +82,7 @@ impl Entity for Player {
     }
 
     fn update(&mut self, game_context : &mut GameContext){
-        self.update_inputs();
+        self.update_inputs(game_context);
         self.apply_physics(game_context.map);
     }
 }
@@ -156,5 +161,8 @@ impl Collidable for Player {
         if !self.on_floor{
             self.vy += GRAVITY * FIXED_TIMESTEP;
         }
+
+        self.hitbox.x = self.hitbox.x.round();
+        self.hitbox.y = self.hitbox.y.round();
     }
 }

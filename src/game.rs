@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::constants::{FIXED_TIMESTEP, TILE_SIZE};
+use crate::spell::{self, Spell};
 use crate::textures::AssetManager;
 use macroquad::prelude::*;
 use crate::player::Player;
@@ -15,11 +16,14 @@ pub struct Game {
     to_spawn : Vec<Box<dyn Entity>>,
     mobs : Vec<Box<dyn Entity>>,
     player : Player,
+    spells_to_spawn : Vec<Spell>,
+    spells : Vec<Spell>
 }
 
 pub struct GameContext<'a> {
     pub map : &'a mut HashMap<(i32,i32), (i32,i32)>,
     pub player_hitbox : Rect,
+    pub spells_to_spawn : &'a mut Vec<Spell>
 }
 
 impl Game {
@@ -43,7 +47,9 @@ impl Game {
             .unwrap().get_tiles()),
             to_spawn,
             mobs : Vec::new(),
-            player: player_ldtk(entity_layer)
+            player : player_ldtk(entity_layer),
+            spells_to_spawn : Vec::new(),
+            spells : Vec::new()
         }
     }
 
@@ -59,6 +65,7 @@ impl Game {
         let mut game_context = GameContext {
             player_hitbox : self.player.get_hitbox(),
             map: &mut self.map,
+            spells_to_spawn : &mut self.spells_to_spawn
         };
         
         set_camera(&self.camera);
@@ -76,6 +83,10 @@ impl Game {
 
             self.player.update(&mut game_context);
 
+            for spell in self.spells.iter_mut() {
+                spell.update(&mut game_context);
+            }
+
             self.accumulator -= FIXED_TIMESTEP;
         }
 
@@ -83,7 +94,11 @@ impl Game {
             entity.draw();
         }
 
-        self.player.draw();
+        self.player.draw2().await;
+
+        for spell in self.spells.iter() {
+            spell.draw();
+        }
 
         // draw_text("I LOVE KENNETH", 265., 125., 24., RED);
 
@@ -94,6 +109,11 @@ impl Game {
             };
             draw_texture_ex(&self.textures.tileset,tile.0.0 as f32, tile.0.1 as f32, WHITE, d);
         });
+
+        for spell in self.spells_to_spawn.drain(..){
+            self.spells.push(spell);
+        }
+
         next_frame().await;
     }
 

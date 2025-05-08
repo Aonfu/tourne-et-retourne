@@ -8,6 +8,7 @@ mod textures;
 mod screen;
 mod menu;
 mod lever;
+mod spell;
 
 use game::Game;
 use screen::Screen;
