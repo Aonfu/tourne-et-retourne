@@ -1,4 +1,4 @@
-use crate::{constants::FIXED_TIMESTEP, game::GameContext};
+use crate::{constants::{FIXED_TIMESTEP, TILE_SIZE}, game::GameContext};
 use macroquad::prelude::*;
 
 use crate::{constants::SPEED, traits::entity::Entity};
@@ -36,6 +36,16 @@ impl Entity for Spell {
     fn update(&mut self, game_context: &mut GameContext) {
         self.hitbox.x += self.velocity.x * FIXED_TIMESTEP;
         self.hitbox.y += self.velocity.y * FIXED_TIMESTEP;
+
+        let mut a = false;
+        for tile in &mut *game_context.map {
+            if self.hitbox.overlaps(&Rect { x: tile.0.0 as f32, y: tile.0.1 as f32, w: TILE_SIZE as f32, h: TILE_SIZE as f32}) && tile.1.0 == 16 && tile.0.1 == 16 {
+                a = true;
+            }
+        }
+        if a {
+        game_context.map.retain(|_,v| *v !=(16,16));
+        }
     }
 
     fn draw(&self) {

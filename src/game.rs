@@ -30,7 +30,7 @@ impl Game {
     pub async fn new() -> Game {
         let file = load_string("assets/test.ldtk").await.unwrap();
         let project: LDtkProject = serde_json::from_str(&file).unwrap();
-        let level = &project.get_levels()[1];
+        let level = &project.get_levels()[2];
         let layers = level.get_layer_instances().unwrap();
         let entity_layer = layers.iter().find(|layer| layer.get_identifier() == "Entities").unwrap();
         let to_spawn = entity_to_spawn(entity_layer);
@@ -96,10 +96,6 @@ impl Game {
 
         self.player.draw2().await;
 
-        for spell in self.spells.iter() {
-            spell.draw();
-        }
-
         // draw_text("I LOVE KENNETH", 265., 125., 24., RED);
 
         self.map.iter().for_each(|tile| {
@@ -110,9 +106,15 @@ impl Game {
             draw_texture_ex(&self.textures.tileset,tile.0.0 as f32, tile.0.1 as f32, WHITE, d);
         });
 
+        for spell in self.spells.iter() {
+            spell.draw();
+        }
+
         for spell in self.spells_to_spawn.drain(..){
             self.spells.push(spell);
         }
+
+        self.spells.retain(|spell| spell.get_hitbox().x < self.camera.target.x + (screen_width() / self.camera.zoom.x.abs()) / 2. );
 
         next_frame().await;
     }
